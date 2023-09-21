@@ -1,0 +1,9 @@
+#cloud-config
+packages:
+  - nginx
+runcmd:
+  - sudo apt-get upgrade -y
+  - sudo apt-get update -y
+  - sudo apt install nginx -y
+  - systemctl start nginx
+  - sudo systemctl enable nginx 

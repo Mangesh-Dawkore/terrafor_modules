@@ -7,11 +7,10 @@ terraform {
   }
 }
 provider "aws" {
-  region = "ap-south-1"
+  region = var.region
 }
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
-
 }
 
 data "template_file" "user_data" {
@@ -19,28 +18,28 @@ data "template_file" "user_data" {
 }
 
 resource "aws_key_pair" "deployer" {
-  key_name   = "id_rsa"
-  public_key = file("~/.ssh/id_rsa.pub")
+  key_name   = var.key_name
+  public_key = var.public_key
 }
 resource "aws_instance" "my_server" {
-  ami                    = "ami-0f5ee92e2d63afc18"
+  ami                    = var.ami
   instance_type          = var.instance_type
   key_name               = aws_key_pair.deployer.key_name
   user_data              = data.template_file.user_data.rendered
   vpc_security_group_ids = [aws_security_group.sg_my_server.id]
   subnet_id              = aws_subnet.sub1.id
   tags = {
-    Name = "myserver"
+    Name = var.instance_name
   }
   connection {
     type        = "ssh"
     user        = "ubuntu"              # Replace with the appropriate username for your EC2 instance
-    private_key = file("~/.ssh/id_rsa") # Replace with the path to your private key
+    private_key = var.private_key     # Replace with the path to your private key
     host        = self.public_ip
   }
 }
 resource "aws_security_group" "sg_my_server" {
-  name        = "sg_my_server"
+  name        = var.sg_name
   description = "my_security_group"
   vpc_id      = aws_vpc.main.id
 
@@ -80,8 +79,8 @@ resource "aws_route_table_association" "rta1" {
 }
 resource "aws_subnet" "sub1" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.0.0/24"
-  availability_zone       = "ap-south-1a"
+  cidr_block              = var.cidr_for_subnet
+  availability_zone       = var.subnet_AZ
   map_public_ip_on_launch = true
 }
 
